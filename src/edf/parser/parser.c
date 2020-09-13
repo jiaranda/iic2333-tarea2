@@ -1,7 +1,9 @@
 #include "parser.h"
+#include "../process/process.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 void read_file(char* path)
 {
@@ -16,19 +18,20 @@ void read_file(char* path)
   while (fgets(line, sizeof(line), file))
   {
     // TODO: parse line & process_init
-    printf("%s", line);
+    parse_line(line);
   }
   
   fclose(file);
 }
 
-// void parse_line(char* line)
-// {
-
-// }
-
-// int main(void)
-// {
-//   read_file("test.txt");
-//   return 0;
-// }
+void parse_line(char* line)
+{
+  char local_line[2048];
+  strcpy(&local_line, line);
+  char* token = strtok(local_line, " ");
+  while (token != NULL)
+  {
+    printf("%s\n", token);
+    token = strtok(NULL, " ");
+  }
+}
