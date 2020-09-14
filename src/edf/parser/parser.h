@@ -1,4 +1,5 @@
-#include "../process/process.h"
+#include "../queue/queue.h"
+#include <stdint.h>
 
-void read_file(char* path);
+Queue* read_file(char* path, uint32_t CPU_qty);
 Process* parse_line(char* line);

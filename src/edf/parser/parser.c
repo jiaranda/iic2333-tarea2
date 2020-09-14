@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void read_file(char* path)
+Queue* read_file(char* path, uint32_t CPU_qty)
 {
   FILE* file = fopen(path, "r");
   if (!file)
@@ -15,13 +15,20 @@ void read_file(char* path)
   char* line[2048];
 
   uint32_t process_qty = atoi(strtok(fgets(line, sizeof(line), file), "\n"));
+
+  Queue* queue = queue_init(process_qty, CPU_qty);
+
+  int queue_len = 0;
   while (fgets(line, sizeof(line), file))
   {
     // TODO: parse line & process_init
-    parse_line(line);
+    Process* process = parse_line(line);
+    add_process_to_queue(queue, process, queue_len);
+    queue_len++;
   }
   
   fclose(file);
+  return queue;
 }
 
 Process* parse_line(char* line)

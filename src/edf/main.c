@@ -6,23 +6,24 @@ int main(int argc, char* argv[])
 {
   char* input_path;
   char* output_path;
-  int cpu_number;
+  uint32_t CPU_qty;
   switch (argc)
   {
   case 3:
     input_path = argv[1];
     output_path = argv[2];
-    cpu_number = 1;
+    CPU_qty = 1;
     break;
   case 4:
     input_path = argv[1];
     output_path = argv[2];
-    cpu_number = atoi(argv[3]);
+    CPU_qty = atoi(argv[3]);
     break;
   default:
     printf("Error cantidad de argumentos \n");
     return 0;
-  }
-  read_file(input_path);
+  }  
+  Queue* queue = read_file(input_path, CPU_qty);
+  queue_print(queue);
   return 0;
 }
