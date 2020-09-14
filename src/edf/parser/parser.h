@@ -1,2 +1,4 @@
+#include "../process/process.h"
+
 void read_file(char* path);
-void parse_line(char* line);
+Process* parse_line(char* line);
