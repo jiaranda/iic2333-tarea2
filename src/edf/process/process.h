@@ -22,6 +22,8 @@ typedef struct process {
     uint32_t burst_time[255];
     uint32_t waiting_time[255];
     uint32_t burst_time_len;
+    uint32_t started_waiting_time;
+    uint32_t current_burst; // valor de n actual
 } Process;
 
 

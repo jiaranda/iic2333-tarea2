@@ -50,9 +50,44 @@ Process* get_next_arrival_process(Simulation* simulation)
   return process;
 }
 
+Process* get_next_ready_process(Simulation* simulation)
+{
+  Process* process = NULL;
+  uint32_t process_stop_waiting;
+  
+  for (uint32_t i = 0; i < simulation -> queue -> process_qty; i++)
+  {
+    Process* current_process = simulation -> queue -> process_array[i];
+    uint32_t current_process_waiting_time = current_process -> waiting_time[current_process -> current_burst];
+    uint32_t current_process_started_waiting_time = current_process -> started_waiting_time;
+    uint32_t current_process_stop_waiting = current_process_started_waiting_time + current_process_waiting_time;
+    if (current_process -> status == WAITING)
+    {
+      if (!process)
+      {
+        process = current_process;
+        process_stop_waiting = current_process_stop_waiting;
+      }
+      else if (current_process_stop_waiting < process_stop_waiting)
+      {
+        process = current_process;
+        process_stop_waiting = current_process_stop_waiting;
+      }
+      else if (current_process_stop_waiting == process_stop_waiting && current_process -> pid < process -> pid)
+      {
+        process = current_process;
+        process_stop_waiting = current_process_stop_waiting;
+      }
+    }
+  }
+  return process;
+}
+
 void run(Simulation* simulation)
 {
-  Process* next_arrival_process = get_next_arrival_process(simulation);
-  process_print(next_arrival_process);
+  // Process* next_arrival_process = get_next_arrival_process(simulation);
+  // process_print(next_arrival_process);
+  Process* next_ready_process = get_next_ready_process(simulation);
+  process_print(next_ready_process);
 }
 

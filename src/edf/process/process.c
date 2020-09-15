@@ -16,6 +16,7 @@ Process* process_init(pid_t pid,
   process -> deadline = deadline;
   process -> status = NOT_ARRIVED;
   process -> priority = 1;
+  process -> current_burst = 0;
 
   for (uint32_t i = 0; i < burst_time_len-1; i++)
   {
