@@ -21,4 +21,38 @@ void simulation_destroy(Simulation* simulation)
   {
     cpu_destroy(simulation -> cpu_array[i]);
   }
+  free(simulation);
 }
+
+Process* get_next_arrival_process(Simulation* simulation)
+{
+  Process* process = NULL;
+  
+  for (uint32_t i = 0; i < simulation -> queue -> process_qty; i++)
+  {
+    Process* current_process = simulation -> queue -> process_array[i];
+    if (current_process -> status == NOT_ARRIVED)
+    {
+      if (!process)
+      {
+        process = current_process;
+      }
+      else if (current_process -> arrival_time < process -> arrival_time)
+      {
+        process = current_process;
+      }
+      else if (current_process -> arrival_time == process -> arrival_time && current_process -> pid < process -> pid)
+      {
+        process = current_process;
+      }
+    }
+  }
+  return process;
+}
+
+void run(Simulation* simulation)
+{
+  Process* next_arrival_process = get_next_arrival_process(simulation);
+  process_print(next_arrival_process);
+}
+

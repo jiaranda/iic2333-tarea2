@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "parser/parser.h"
+#include "simulation/simulation.h"
 
 int main(int argc, char* argv[])
 {
@@ -23,11 +23,11 @@ int main(int argc, char* argv[])
     printf("Error cantidad de argumentos \n");
     return 0;
   }  
-  Queue* queue = read_file(input_path);
-  queue_print(queue);
-
+  Simulation* simulation = simulation_init(input_path, CPU_qty);
+  
+  run(simulation);
   // TODO: correr simulación
   // TODO: generar output
-
+  simulation_destroy(simulation);
   return 0;
 }

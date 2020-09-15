@@ -13,9 +13,9 @@ Simulation* simulation_init(char* input_path, uint32_t CPU_qty);
 void simulation_destroy(Simulation* simulation);
 void run(Simulation* simulation);
 
-uint32_t get_next_arrival_process(Simulation* simulation);
-uint32_t get_next_ready_process(Simulation* simulation);
-uint32_t get_next_finished_burst_process(Simulation* simulation);
+Process* get_next_arrival_process(Simulation* simulation);
+Process* get_next_ready_process(Simulation* simulation);
+Process* get_next_finished_burst_process(Simulation* simulation);
 void handle_next_arrival_process(Simulation* simulation);
 void handle_next_ready_process(Simulation* simulation);
 void handle_next_finished_burst_process(Simulation* simulation);

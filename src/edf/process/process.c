@@ -12,9 +12,9 @@ Process* process_init(pid_t pid,
   process->pid = pid;
   strcpy(process->name, name);
   process -> burst_time_len = burst_time_len;
-  process->arrival_time = arrival_time;
-  process->deadline = deadline;
-  process->status = READY;
+  process -> arrival_time = arrival_time;
+  process -> deadline = deadline;
+  process -> status = NOT_ARRIVED;
   process -> priority = 1;
 
   for (uint32_t i = 0; i < burst_time_len-1; i++)

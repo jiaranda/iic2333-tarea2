@@ -5,6 +5,7 @@
 #include <string.h>
 
 typedef enum status {
+    NOT_ARRIVED,
     RUNNING,
     READY,
     WAITING,
