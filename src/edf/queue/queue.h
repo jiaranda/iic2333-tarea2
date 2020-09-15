@@ -1,4 +1,7 @@
+#ifndef PROCESS_H
+#define PROCESS_H
 #include "../process/process.h"
+#endif
 #include <stdint.h>
 
 typedef struct queue

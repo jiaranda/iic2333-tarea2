@@ -1,7 +1,16 @@
+#include <stdbool.h>
+#include <stdint.h>
+#ifndef PROCESS_H
+#define PROCESS_H
+#include "../process/process.h"
+#endif
+
+
 typedef struct cpu
 {
   uint32_t time_left;
   Process* process;
+  bool busy;
 } CPU;
 
 CPU* cpu_init();

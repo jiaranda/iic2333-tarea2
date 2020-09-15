@@ -9,7 +9,7 @@ typedef struct simulation
   uint32_t CPU_qty;
 } Simulation;
 
-void simulation_init(char* input_path, char* CPU_qty);
+Simulation* simulation_init(char* input_path, uint32_t CPU_qty);
 void simulation_destroy(Simulation* simulation);
 void run(Simulation* simulation);
 
