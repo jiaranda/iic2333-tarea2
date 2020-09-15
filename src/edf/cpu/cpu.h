@@ -11,6 +11,7 @@ typedef struct cpu
   uint32_t time_left;
   Process* process;
   bool busy;
+  uint32_t time_process_added;
 } CPU;
 
 CPU* cpu_init();

@@ -83,10 +83,40 @@ Process* get_next_ready_process(Simulation* simulation)
   return process;
 }
 
+CPU* get_next_finished_burst_cpu(Simulation* simulation)
+{
+  CPU* cpu = NULL;
+  uint32_t cpu_finish_burst_time;
+  for (uint32_t i = 0; i < simulation -> CPU_qty; i++)
+  {
+    CPU* current_cpu = simulation -> cpu_array[i];
+    uint32_t current_cpu_finish_burst_time = current_cpu -> time_left + current_cpu -> time_process_added;
+    if(current_cpu -> busy == true)
+    {
+      if (!cpu)
+      {
+        cpu = current_cpu;
+        cpu_finish_burst_time = cpu -> time_left + cpu -> time_process_added;
+      }
+      else if (current_cpu_finish_burst_time < cpu_finish_burst_time)
+      {
+        cpu = current_cpu;
+        cpu_finish_burst_time = cpu -> time_left + cpu -> time_process_added;
+      }
+      else if (current_cpu_finish_burst_time == cpu_finish_burst_time && current_cpu->process->pid < cpu->process->pid)
+      {
+        cpu = current_cpu;
+        cpu_finish_burst_time = cpu -> time_left + cpu -> time_process_added;
+      }
+    }
+  }
+  return cpu;
+}
+
 void run(Simulation* simulation)
 {
-  // Process* next_arrival_process = get_next_arrival_process(simulation);
-  // process_print(next_arrival_process);
+  Process* next_arrival_process = get_next_arrival_process(simulation);
+  process_print(next_arrival_process);
   Process* next_ready_process = get_next_ready_process(simulation);
   process_print(next_ready_process);
 }
