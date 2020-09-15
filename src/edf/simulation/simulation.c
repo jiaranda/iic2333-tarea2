@@ -116,8 +116,52 @@ CPU* get_next_finished_burst_cpu(Simulation* simulation)
 void run(Simulation* simulation)
 {
   Process* next_arrival_process = get_next_arrival_process(simulation);
-  process_print(next_arrival_process);
   Process* next_ready_process = get_next_ready_process(simulation);
-  process_print(next_ready_process);
+  CPU* next_finished_burst_cpu = get_next_finished_burst_cpu(simulation);
+  // get next event
+  int32_t next_event_times[3] = {-1, -1, -1};
+  if (next_arrival_process)
+  {
+    next_event_times[0] = next_arrival_process->arrival_time;
+  }
+  if (next_ready_process)
+  {
+    next_event_times[1] = next_ready_process -> waiting_time[next_ready_process -> current_burst] + next_ready_process -> started_waiting_time;
+  }
+  if (next_finished_burst_cpu)
+  {
+    next_event_times[2] = next_finished_burst_cpu -> time_left + next_finished_burst_cpu -> time_process_added;
+  }
+  int next_event_index = -1;
+  for (int i = 0; i < 3; i++)
+  {
+    if (next_event_times[i] != -1)
+    {
+      if (next_event_index == -1)
+      {
+        next_event_index = i;
+      }
+      else if (next_event_times[i] < next_event_times[next_event_index])
+      {
+        next_event_index = i;
+      }
+    }
+  }
+  switch (next_event_index)
+  {
+  case 0:
+    printf("Evento: process arriving\n");
+    break;
+  case 1:
+    printf("Evento: process ready\n");
+    break;
+  case 2:
+  printf("Evento: CPU ready\n");
+    break;
+  default:
+    // finish simulation
+    printf("temrinada\n");
+    break;
+  }
 }
 
