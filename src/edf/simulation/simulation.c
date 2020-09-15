@@ -113,6 +113,40 @@ CPU* get_next_finished_burst_cpu(Simulation* simulation)
   return cpu;
 }
 
+
+void handle_next_arrival_process(Simulation* simulation, Process* process)
+{
+  // cambiar el estado del proceso de NOT_ARRIVED a READY
+  process->status = READY;
+  simulation->current_time = process->arrival_time;
+  // intentar meter proceso a CPU
+  printf("handle_next_arrival_process\n");
+}
+
+void handle_next_ready_process(Simulation* simulation, Process* process)
+{
+  // cambiar el estado del proceso de WAITING a READY
+  // actualizar tiempo en el proceso
+  // actualizar current time simulacion
+  // intentar meter proceso a CPU
+  printf("handle_next_ready_process\n");
+}
+
+void handle_next_finished_burst_process(Simulation* simulation, Process* process)
+{
+  // TIEMPO ACTUAL
+  // pasar proceso de cpu a WAITING / FINISHED según caso
+  // actualizar tiempo en el proceso
+  // proceso de cpu a null ?? ---> pasar busy a false
+  // TIEMPO ACTUAL + 1
+  // proceso meterlo a CPU
+  // actualizar tiempo en el proceso
+  // pasar proceso de WAITING / NOT_ARRIVED a RUNNING
+  
+  printf("handle_next_finished_burst_process\n");
+
+}
+
 void run(Simulation* simulation)
 {
   Process* next_arrival_process = get_next_arrival_process(simulation);
