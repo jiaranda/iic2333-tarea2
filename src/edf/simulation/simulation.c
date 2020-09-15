@@ -139,6 +139,24 @@ Process* get_next_process(Simulation* simulation, Status status)
         process_time = current_process->status_times[status];
       }
     }
+    else if (status == DEADLINE && current_process->status == READY)
+    {
+      if (!process)
+      {
+        process = current_process;
+        process_time = current_process->status_times[status];
+      }
+      else if (current_process_time < process_time)
+      {
+        process = current_process;
+        process_time = current_process->status_times[status];
+      }
+      else if (current_process_time == process_time && current_process->pid < process->pid)
+      {
+        process = current_process;
+        process_time = current_process->status_times[status];
+      }
+    }
   }
   return process;
 }
@@ -147,41 +165,83 @@ void add_process_to_cpu(Simulation* simulation)
 {
   // iterar sobre cada elemento de la cola y entregar el proceso ready que tenga menor deadline
   Process* next_deadline_process = get_next_process(simulation, DEADLINE);
-  
-  
-  // hacer esto si asigno a CPU
-  next_deadline_process->current_burst++;
-  next_deadline_process->status = RUNNING;
-  // next_deadline_process->status_times[RUNNING] = 
-  //simulation->cpu_array[]
+  if (!next_deadline_process) return;
 
-
-  // Iterar sobre cada cpu y encontrar al proceso que le falta más por terminar ???
-  // si es que puedo
-  // hacer swap --> meter proceso neuvo a la cpu y cambiar atributos
+  CPU* cpu_free = NULL;
+  uint32_t time_process_finished;
+  for (uint32_t i = 0; i < simulation->CPU_qty; i++)
+  {
+    CPU* current_cpu = simulation->cpu_array[i];
+    uint32_t current_cpu_time_process_finished = simulation->cpu_array[i]->time_process_finished;
+    if (!cpu_free && !current_cpu->busy)
+    {
+      cpu_free = current_cpu;
+      time_process_finished = current_cpu_time_process_finished;
+    }
+    else if (!current_cpu->busy && current_cpu_time_process_finished < time_process_finished)
+    {
+      cpu_free = current_cpu;
+      time_process_finished = current_cpu_time_process_finished;
+    }
+  }
+  if (cpu_free)
+  {
+    // asignar al tiro el proceso con deadline más corto
+    simulation->current_time++;
+    cpu_free->process = next_deadline_process;
+    cpu_free->time_process_added = simulation->current_time;
+    cpu_free->busy = true;
+    cpu_free->time_left = next_deadline_process->burst_time[next_deadline_process->current_burst];
+    next_deadline_process->status = RUNNING;
+  }
+  else
+  {
+    CPU* cpu = NULL;
+    uint32_t deadline_cpu;
+    for (uint32_t i = 0; i < simulation->CPU_qty; i++)
+    {
+      CPU* current_cpu = simulation->cpu_array[i];
+      uint32_t deadline_current_cpu = simulation->cpu_array[i]->process->deadline;
+      if (!cpu && current_cpu->busy)
+      {
+        cpu = current_cpu;
+        deadline_cpu = deadline_current_cpu;
+      }
+      else if (current_cpu->busy && deadline_current_cpu < deadline_cpu)
+      {
+        cpu = current_cpu;
+        deadline_cpu = deadline_current_cpu;
+      }
+    }
+    if (next_deadline_process->deadline < cpu->process->deadline)
+    {
+      simulation->current_time++;
+      Process* out_process = cpu->process;
+      out_process->status = READY;
+      out_process->burst_time[out_process->current_burst] = simulation->current_time - cpu->time_process_added;
+      next_deadline_process->status = RUNNING;
+      cpu->process = next_deadline_process;
+      cpu->time_process_added = simulation->current_time;
+      cpu->time_left = next_deadline_process->burst_time[next_deadline_process->current_burst];
+    }
+  }
   printf("added process to cpu\n");        
 }
 
 
 void handle_next_arrival_process(Simulation* simulation, Process* process)
 {
-  // cambiar el estado del proceso de NOT_ARRIVED a READY
   process->status = READY;
   simulation->current_time = process->arrival_time;
-  // intentar meter proceso a CPU
   add_process_to_cpu(simulation);
   printf("handle_next_arrival_process\n");
 }
 
 void handle_next_ready_process(Simulation* simulation, Process* process)
 {
-  // cambiar el estado del proceso de WAITING a READY
   process->status = READY;
-  // actualizar tiempo en el proceso
-  process->status_times[READY] = process->status_times[WAITING]; //el tiempo en que paso a ready
-  // actualizar current time simulacion
   simulation->current_time = process->status_times[WAITING];
-  // intentar meter proceso a CPU
+  process->current_burst++;
   add_process_to_cpu(simulation);
   printf("handle_next_ready_process\n");
 }
@@ -190,84 +250,87 @@ void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
 {
   // TIEMPO ACTUAL
   // pasar proceso de cpu a WAITING / FINISHED según caso
+  simulation->current_time += cpu->time_left;
   if (cpu->process->current_burst == cpu->process->burst_time_len)
   {
     cpu->process->status = FINISHED;
-    
+    cpu->busy = false;
+    cpu->time_process_finished = simulation->current_time;
+    add_process_to_cpu(simulation);
   }
   else
   {
     cpu->process->status = WAITING;
-    // cpu->process->status_times[WAITING] = simulation->current_time + 
+    cpu->busy = false;
+    cpu->time_process_finished = simulation->current_time;
+    cpu->process->status_times[WAITING] = simulation->current_time + cpu->process->waiting_time[cpu->process->current_burst];
   }
-  
-  
-  // TIEMPO ACTUAL
-  // pasar proceso de cpu a WAITING / FINISHED según caso
-  // actualizar tiempo en el proceso
-  // proceso de cpu a null ?? ---> pasar busy a false
-  // TIEMPO ACTUAL + 1
-  // proceso meterlo a CPU
-  // actualizar tiempo en el proceso
-  // pasar proceso de WAITING / NOT_ARRIVED a RUNNING
   printf("handle_next_finished_burst_process\n");
 }
 
 void run(Simulation* simulation)
 {
-  // Process* next_arrival_process = get_next_arrival_process(simulation);
-  // Process* next_ready_process = get_next_ready_process(simulation);
-  // CPU* next_finished_burst_cpu = get_next_finished_burst_cpu(simulation);
-  Process* next_arrival_process = get_next_process(simulation, NOT_ARRIVED);
-  Process* next_ready_process = get_next_process(simulation, WAITING);
-  CPU* next_finished_burst_cpu = get_next_finished_burst_cpu(simulation);
+  while (1)
+  {
+    // Process* next_arrival_process = get_next_arrival_process(simulation);
+    // Process* next_ready_process = get_next_ready_process(simulation);
+    // CPU* next_finished_burst_cpu = get_next_finished_burst_cpu(simulation);
+    Process* next_arrival_process = get_next_process(simulation, NOT_ARRIVED);
+    Process* next_ready_process = get_next_process(simulation, WAITING);
+    CPU* next_finished_burst_cpu = get_next_finished_burst_cpu(simulation);
 
 
 
-  // get next event
-  int32_t next_event_times[3] = {-1, -1, -1};
-  if (next_arrival_process)
-  {
-    next_event_times[0] = next_arrival_process->arrival_time;
-  }
-  if (next_ready_process)
-  {
-    next_event_times[1] = next_ready_process -> waiting_time[next_ready_process -> current_burst] + next_ready_process -> started_waiting_time;
-  }
-  if (next_finished_burst_cpu)
-  {
-    next_event_times[2] = next_finished_burst_cpu -> time_left + next_finished_burst_cpu -> time_process_added;
-  }
-  int next_event_index = -1;
-  for (int i = 0; i < 3; i++)
-  {
-    if (next_event_times[i] != -1)
+    // get next event
+    int32_t next_event_times[3] = {-1, -1, -1};
+    if (next_arrival_process)
     {
-      if (next_event_index == -1)
+      next_event_times[0] = next_arrival_process->arrival_time;
+    }
+    if (next_ready_process)
+    {
+      next_event_times[1] = next_ready_process -> waiting_time[next_ready_process -> current_burst] + next_ready_process -> started_waiting_time;
+    }
+    if (next_finished_burst_cpu)
+    {
+      next_event_times[2] = next_finished_burst_cpu -> time_left + next_finished_burst_cpu -> time_process_added;
+    }
+    int next_event_index = -1;
+    for (int i = 0; i < 3; i++)
+    {
+      if (next_event_times[i] != -1)
       {
-        next_event_index = i;
-      }
-      else if (next_event_times[i] < next_event_times[next_event_index])
-      {
-        next_event_index = i;
+        if (next_event_index == -1)
+        {
+          next_event_index = i;
+        }
+        else if (next_event_times[i] < next_event_times[next_event_index])
+        {
+          next_event_index = i;
+        }
       }
     }
-  }
-  switch (next_event_index)
-  {
-  case 0:
-    printf("Evento: process arriving\n");
-    break;
-  case 1:
-    printf("Evento: process ready\n");
-    break;
-  case 2:
-  printf("Evento: CPU ready\n");
-    break;
-  default:
-    // finish simulation
-    printf("temrinada\n");
-    break;
-  }
+    switch (next_event_index)
+    {
+    case PROCESS_ARRIVAL:
+      printf("Evento: process arriving\n");
+      handle_next_arrival_process(simulation, next_arrival_process);
+      break;
+    case PROCESS_READY:
+      printf("Evento: process ready\n");
+      handle_next_ready_process(simulation, next_ready_process);
+      break;
+    case BURST_FINISHED:
+      printf("Evento: CPU ready\n");
+      handle_next_finished_burst_process(simulation, next_finished_burst_cpu);
+      break;
+    default:
+      // finish simulation
+      printf("Terminada!\n");
+      return;
+      break;
+    }
+  };
+  
 }
 

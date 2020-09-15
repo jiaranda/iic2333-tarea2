@@ -1,6 +1,13 @@
 #include "../parser/parser.h"
 #include "../cpu/cpu.h"
 
+typedef enum event
+{
+  PROCESS_ARRIVAL,
+  PROCESS_READY,
+  BURST_FINISHED
+} Event;
+
 typedef struct simulation
 {
   CPU* cpu_array[255];
