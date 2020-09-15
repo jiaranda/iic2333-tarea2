@@ -6,10 +6,11 @@
 
 typedef enum status {
     NOT_ARRIVED,
-    RUNNING,
     READY,
+    RUNNING,
     WAITING,
-    FINISHED
+    FINISHED,
+    DEADLINE
 } Status;
 
 typedef struct process {
@@ -24,6 +25,8 @@ typedef struct process {
     uint32_t burst_time_len;
     uint32_t started_waiting_time;
     uint32_t current_burst; // valor de n actual
+    // tiempo sumado (no delta tiempo)
+    int32_t status_times[6];
 } Process;
 
 

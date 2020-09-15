@@ -24,6 +24,14 @@ Process* process_init(pid_t pid,
     process -> waiting_time[i] = waiting_time[i];
   }
   process -> burst_time[burst_time_len-1] = burst_time[burst_time_len-1];
+
+  process->status_times[NOT_ARRIVED] = arrival_time;
+  process->status_times[READY] = -1; // tiempo en que empieza ready
+  process->status_times[RUNNING] = -1; // ultimpo tiempo en que paso a RUNNING
+  process->status_times[WAITING] = -1; // tiempo en que terminara de hacer waiting
+  process->status_times[FINISHED] = -1; // tiempo en que el proceso termino (paso a FINISHED)
+  process->status_times[DEADLINE] = deadline;
+
   return process;
 }
 

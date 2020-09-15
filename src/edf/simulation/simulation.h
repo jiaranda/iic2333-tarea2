@@ -18,5 +18,6 @@ Process* get_next_ready_process(Simulation* simulation);
 CPU* get_next_finished_burst_cpu(Simulation* simulation);
 void handle_next_arrival_process(Simulation* simulation, Process* process);
 void handle_next_ready_process(Simulation* simulation, Process* process);
-void handle_next_finished_burst_process(Simulation* simulation, Process* process);
+void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu);
 void add_process_to_cpu(Simulation* simulation);
+Process* get_next_process(Simulation* simulation, Status status); // status --> status sobre el que voy a buscar el array
