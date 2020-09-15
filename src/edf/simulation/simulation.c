@@ -193,6 +193,7 @@ void add_process_to_cpu(Simulation* simulation)
     cpu_free->busy = true;
     cpu_free->time_left = next_deadline_process->burst_time[next_deadline_process->current_burst];
     next_deadline_process->status = RUNNING;
+    printf("PID: %d - added process to cpu\n", cpu_free->process->pid);
   }
   else
   {
@@ -223,33 +224,34 @@ void add_process_to_cpu(Simulation* simulation)
       cpu->process = next_deadline_process;
       cpu->time_process_added = simulation->current_time;
       cpu->time_left = next_deadline_process->burst_time[next_deadline_process->current_burst];
+      printf("PID: %d - added process to cpu\n", cpu->process->pid);
     }
-  }
-  printf("added process to cpu\n");        
+  }       
 }
 
 
 void handle_next_arrival_process(Simulation* simulation, Process* process)
 {
+  printf("EVENT: PID %d handle_next_arrival_process\n", process->pid);
   process->status = READY;
   simulation->current_time = process->arrival_time;
   add_process_to_cpu(simulation);
-  printf("handle_next_arrival_process\n");
 }
 
 void handle_next_ready_process(Simulation* simulation, Process* process)
 {
+  printf("EVENT: PID %d handle_next_ready_process\n", process->pid);
   process->status = READY;
   simulation->current_time = process->status_times[WAITING];
   process->current_burst++;
   add_process_to_cpu(simulation);
-  printf("handle_next_ready_process\n");
 }
 
 void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
 {
   // TIEMPO ACTUAL
   // pasar proceso de cpu a WAITING / FINISHED según caso
+  printf("EVENT: PID %d handle_next_finished_burst_process\n", cpu->process->pid);
   simulation->current_time += cpu->time_left;
   if (cpu->process->current_burst == cpu->process->burst_time_len)
   {
@@ -265,7 +267,6 @@ void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
     cpu->time_process_finished = simulation->current_time;
     cpu->process->status_times[WAITING] = simulation->current_time + cpu->process->waiting_time[cpu->process->current_burst];
   }
-  printf("handle_next_finished_burst_process\n");
 }
 
 void run(Simulation* simulation)
@@ -313,15 +314,12 @@ void run(Simulation* simulation)
     switch (next_event_index)
     {
     case PROCESS_ARRIVAL:
-      printf("Evento: process arriving\n");
       handle_next_arrival_process(simulation, next_arrival_process);
       break;
     case PROCESS_READY:
-      printf("Evento: process ready\n");
       handle_next_ready_process(simulation, next_ready_process);
       break;
     case BURST_FINISHED:
-      printf("Evento: CPU ready\n");
       handle_next_finished_burst_process(simulation, next_finished_burst_cpu);
       break;
     default:
