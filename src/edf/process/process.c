@@ -1,6 +1,4 @@
 #include "process.h"
-#include <string.h>
-#include <stdlib.h>
 
 Process* process_init(pid_t pid, 
                       char* name, 

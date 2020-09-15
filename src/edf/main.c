@@ -23,7 +23,11 @@ int main(int argc, char* argv[])
     printf("Error cantidad de argumentos \n");
     return 0;
   }  
-  Queue* queue = read_file(input_path, CPU_qty);
+  Queue* queue = read_file(input_path);
   queue_print(queue);
+
+  // TODO: correr simulación
+  // TODO: generar output
+
   return 0;
 }
