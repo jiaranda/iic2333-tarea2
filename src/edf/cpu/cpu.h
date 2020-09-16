@@ -1,4 +1,7 @@
+#ifndef BOOL_H
+#define BOOL_H
 #include <stdbool.h>
+#endif
 #include <stdint.h>
 #ifndef PROCESS_H
 #define PROCESS_H
@@ -12,6 +15,7 @@ typedef struct cpu
   Process* process;
   bool busy;
   uint32_t time_process_added;
+  uint32_t time_process_finished;
 } CPU;
 
 CPU* cpu_init();
