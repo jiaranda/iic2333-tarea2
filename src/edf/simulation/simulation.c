@@ -209,6 +209,7 @@ void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
     cpu->process->status = FINISHED;
     cpu->process->turnaround_time = simulation->current_time - cpu->process->arrival_time;
     cpu->process->waiting_total_time = cpu->process->turnaround_time - cpu->process->initial_burst_total_time;
+    cpu->process->process_finished_bf_deadline = simulation->current_time - cpu->process->arrival_time <= cpu->process->deadline;
   }
   else
   {
@@ -216,7 +217,6 @@ void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
     cpu->process->status = WAITING;
     cpu->process->status_times[WAITING] = simulation->current_time + cpu->process->waiting_time[cpu->process->current_burst];
   }
-  cpu->process->interrupt_count++;
   add_process_to_cpu(simulation);
 
 }
@@ -287,8 +287,7 @@ void load_process_output(Process* process, FILE* file)
   uint32_t turnaround_time = process->turnaround_time;
   uint32_t response_time = process->response_time;
   uint32_t waiting_total_time = process->waiting_total_time;
-  //bool process_finished_bf_deadline = process->process_finished_bf_deadline;
-  bool process_finished_bf_deadline = true;
+  bool process_finished_bf_deadline = process->process_finished_bf_deadline;
   fprintf(
     file, 
     "%s,%u,%u,%u,%u,%u,%d\n", 
