@@ -24,65 +24,6 @@ void simulation_destroy(Simulation* simulation)
   free(simulation);
 }
 
-Process* get_next_arrival_process(Simulation* simulation)
-{
-  Process* process = NULL;
-  
-  for (uint32_t i = 0; i < simulation -> queue -> process_qty; i++)
-  {
-    Process* current_process = simulation -> queue -> process_array[i];
-    if (current_process -> status == NOT_ARRIVED)
-    {
-      if (!process)
-      {
-        process = current_process;
-      }
-      else if (current_process -> arrival_time < process -> arrival_time)
-      {
-        process = current_process;
-      }
-      else if (current_process -> arrival_time == process -> arrival_time && current_process -> pid < process -> pid)
-      {
-        process = current_process;
-      }
-    }
-  }
-  return process;
-}
-
-Process* get_next_ready_process(Simulation* simulation)
-{
-  Process* process = NULL;
-  uint32_t process_stop_waiting;
-  
-  for (uint32_t i = 0; i < simulation -> queue -> process_qty; i++)
-  {
-    Process* current_process = simulation -> queue -> process_array[i];
-    uint32_t current_process_waiting_time = current_process -> waiting_time[current_process -> current_burst];
-    uint32_t current_process_started_waiting_time = current_process -> started_waiting_time;
-    uint32_t current_process_stop_waiting = current_process_started_waiting_time + current_process_waiting_time;
-    if (current_process -> status == WAITING)
-    {
-      if (!process)
-      {
-        process = current_process;
-        process_stop_waiting = current_process_stop_waiting;
-      }
-      else if (current_process_stop_waiting < process_stop_waiting)
-      {
-        process = current_process;
-        process_stop_waiting = current_process_stop_waiting;
-      }
-      else if (current_process_stop_waiting == process_stop_waiting && current_process -> pid < process -> pid)
-      {
-        process = current_process;
-        process_stop_waiting = current_process_stop_waiting;
-      }
-    }
-  }
-  return process;
-}
-
 CPU* get_next_finished_burst_cpu(Simulation* simulation)
 {
   CPU* cpu = NULL;
@@ -163,7 +104,6 @@ Process* get_next_process(Simulation* simulation, Status status)
 
 void add_process_to_cpu(Simulation* simulation)
 {
-  // iterar sobre cada elemento de la cola y entregar el proceso ready que tenga menor deadline
   Process* next_deadline_process = get_next_process(simulation, DEADLINE);
   if (!next_deadline_process) return;
 
@@ -186,7 +126,6 @@ void add_process_to_cpu(Simulation* simulation)
   }
   if (cpu_free)
   {
-    // asignar al tiro el proceso con deadline más corto
     simulation->current_time++;
     cpu_free->process = next_deadline_process;
     cpu_free->time_process_added = simulation->current_time;
@@ -249,8 +188,6 @@ void handle_next_ready_process(Simulation* simulation, Process* process)
 
 void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
 {
-  // TIEMPO ACTUAL
-  // pasar proceso de cpu a WAITING / FINISHED según caso
   simulation->current_time += cpu->time_left;
   if (cpu->process->current_burst == cpu->process->burst_time_len)
   {
@@ -274,16 +211,10 @@ void run(Simulation* simulation)
 {
   while (1)
   {
-    // Process* next_arrival_process = get_next_arrival_process(simulation);
-    // Process* next_ready_process = get_next_ready_process(simulation);
-    // CPU* next_finished_burst_cpu = get_next_finished_burst_cpu(simulation);
     Process* next_arrival_process = get_next_process(simulation, NOT_ARRIVED);
     Process* next_ready_process = get_next_process(simulation, WAITING);
     CPU* next_finished_burst_cpu = get_next_finished_burst_cpu(simulation);
-
-
-
-    // get next event
+    
     int32_t next_event_times[3] = {-1, -1, -1};
     if (next_arrival_process)
     {
