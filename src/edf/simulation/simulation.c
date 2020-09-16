@@ -132,7 +132,13 @@ void add_process_to_cpu(Simulation* simulation)
     cpu_free->busy = true;
     cpu_free->time_left = next_deadline_process->burst_time[next_deadline_process->current_burst];
     next_deadline_process->status = RUNNING;
+    cpu_free->process->CPU_count++;
+    if (cpu_free->process->CPU_count == 1)
+    {
+      cpu_free->process->response_time = simulation->current_time - cpu_free->process->arrival_time;
+    }
     printf("[ADD FREE CPU] PID: %d - added process to cpu\n", cpu_free->process->pid);
+    
   }
   else
   {
@@ -159,11 +165,17 @@ void add_process_to_cpu(Simulation* simulation)
       Process* out_process = cpu->process;
       out_process->status = READY;
       out_process->burst_time[out_process->current_burst] = simulation->current_time - cpu->time_process_added;
+      out_process->interrupt_count++;
       next_deadline_process->status = RUNNING;
       cpu->process = next_deadline_process;
       cpu->time_process_added = simulation->current_time;
       cpu->time_left = next_deadline_process->burst_time[next_deadline_process->current_burst];
-      printf("[ADD BUSY CPU]PID: %d - added process to cpu\n", cpu->process->pid);
+      cpu->process->CPU_count++;
+      if (cpu->process->CPU_count == 1)
+      {
+        cpu->process->response_time = simulation->current_time - cpu->process->arrival_time;
+      }
+      printf("[ADD BUSY CPU] PID: %d - added process to cpu\n", cpu->process->pid);
     }
   }       
 }
@@ -189,22 +201,24 @@ void handle_next_ready_process(Simulation* simulation, Process* process)
 void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
 {
   simulation->current_time += cpu->time_left;
+  cpu->busy = false;
+  cpu->time_process_finished = simulation->current_time;
   if (cpu->process->current_burst == cpu->process->burst_time_len)
   {
     printf("[FINISHED BURST]: PID %d finished burst, now FINISHED (handle_next_finished_burst_process)\n", cpu->process->pid);
     cpu->process->status = FINISHED;
-    cpu->busy = false;
-    cpu->time_process_finished = simulation->current_time;
-    add_process_to_cpu(simulation);
+    cpu->process->turnaround_time = simulation->current_time - cpu->process->arrival_time;
+    cpu->process->waiting_total_time = cpu->process->turnaround_time - cpu->process->initial_burst_total_time;
   }
   else
   {
     printf("[FINISHED BURST]: PID %d finished burst, now WAITING (handle_next_finished_burst_process)\n", cpu->process->pid);
     cpu->process->status = WAITING;
-    cpu->busy = false;
-    cpu->time_process_finished = simulation->current_time;
     cpu->process->status_times[WAITING] = simulation->current_time + cpu->process->waiting_time[cpu->process->current_burst];
   }
+  cpu->process->interrupt_count++;
+  add_process_to_cpu(simulation);
+
 }
 
 void run(Simulation* simulation)
@@ -264,3 +278,39 @@ void run(Simulation* simulation)
   
 }
 
+void load_process_output(Process* process, FILE* file)
+{
+  
+  char* name = process->name;
+  uint32_t CPU_count = process->CPU_count;
+  uint32_t interrupt_count = process->interrupt_count;
+  uint32_t turnaround_time = process->turnaround_time;
+  uint32_t response_time = process->response_time;
+  uint32_t waiting_total_time = process->waiting_total_time;
+  //bool process_finished_bf_deadline = process->process_finished_bf_deadline;
+  bool process_finished_bf_deadline = true;
+  fprintf(
+    file, 
+    "%s,%u,%u,%u,%u,%u,%d\n", 
+    name,
+    CPU_count,
+    interrupt_count,
+    turnaround_time,
+    response_time,
+    waiting_total_time,
+    process_finished_bf_deadline
+    );
+}
+
+void output_simulation(Simulation* simulation, char* output_path)
+{
+  FILE* file = fopen(output_path, "w");
+  fprintf(file, "name,CPU_count,interruption_count,turnaround_time,response_time,waiting_time,deadline\n");
+  for (uint32_t i = 0; i < simulation->queue->process_qty; i++)
+  {
+    Process* process = simulation->queue->process_array[i];
+    load_process_output(process, file);
+  }
+  fclose(file);
+  
+}

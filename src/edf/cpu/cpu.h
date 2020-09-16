@@ -1,4 +1,7 @@
+#ifndef BOOL_H
+#define BOOL_H
 #include <stdbool.h>
+#endif
 #include <stdint.h>
 #ifndef PROCESS_H
 #define PROCESS_H

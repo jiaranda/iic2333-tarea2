@@ -32,6 +32,18 @@ Process* process_init(pid_t pid,
   process->status_times[FINISHED] = -1; // tiempo en que el proceso termino (paso a FINISHED)
   process->status_times[DEADLINE] = deadline;
 
+  process->initial_burst_total_time = 0;
+  for (uint32_t i = 0; i < burst_time_len; i++)
+  {
+    process->initial_burst_total_time += burst_time[i];
+  }
+  // output_variables
+  process->CPU_count = 0;
+  process->interrupt_count = 0;
+  process->turnaround_time = 0;
+  process->response_time = 0;
+  process->waiting_total_time = 0;
+  process->process_finished_bf_deadline = false;
   return process;
 }
 

@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
   run(simulation);
   // TODO: correr simulación
   // TODO: generar output
+  output_simulation(simulation, output_path);
   simulation_destroy(simulation);
   return 0;
 }

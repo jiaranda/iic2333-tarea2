@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef BOOL_H
+#define BOOL_H
+#include <stdbool.h>
+#endif
 
 typedef enum status {
     NOT_ARRIVED,
@@ -15,7 +19,6 @@ typedef enum status {
 
 typedef struct process {
     pid_t pid;
-    char name[32];
     float priority;
     uint32_t arrival_time;
     uint32_t deadline;
@@ -25,8 +28,17 @@ typedef struct process {
     uint32_t burst_time_len;
     uint32_t started_waiting_time;
     uint32_t current_burst; // valor de n actual
-    // tiempo sumado (no delta tiempo)
     int32_t status_times[6];
+
+    //output_variables
+    uint32_t initial_burst_total_time;
+    char name[32];
+    uint32_t CPU_count;
+    uint32_t interrupt_count;
+    uint32_t turnaround_time;
+    uint32_t response_time;
+    uint32_t waiting_total_time;
+    bool process_finished_bf_deadline;
 } Process;
 
 
