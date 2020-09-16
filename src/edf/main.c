@@ -25,10 +25,7 @@ int main(int argc, char* argv[])
   }  
   Simulation* simulation = simulation_init(input_path, CPU_qty);
   
-  run(simulation);
-  // TODO: correr simulación
-  // TODO: generar output
-  output_simulation(simulation, output_path);
+  run(simulation, output_path);
   simulation_destroy(simulation);
   return 0;
 }

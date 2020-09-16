@@ -18,12 +18,12 @@ typedef struct simulation
 
 Simulation* simulation_init(char* input_path, uint32_t CPU_qty);
 void simulation_destroy(Simulation* simulation);
-void run(Simulation* simulation);
+void run(Simulation* simulation, char* output_path);
 
 Process* get_next_arrival_process(Simulation* simulation);
 Process* get_next_ready_process(Simulation* simulation);
 CPU* get_next_finished_burst_cpu(Simulation* simulation);
-void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu);
+void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu, FILE* file);
 void add_process_to_cpu(Simulation* simulation);
 Process* get_next_process(Simulation* simulation, Status status); // status --> status sobre el que voy a buscar el array
 void load_process_output(Process* process, FILE* file);

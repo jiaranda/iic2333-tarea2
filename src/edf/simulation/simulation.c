@@ -142,6 +142,7 @@ void add_process_to_cpu(Simulation* simulation)
   }
   else
   {
+    printf("NO FREE CPU\n");
     CPU* cpu = NULL;
     uint32_t deadline_cpu;
     for (uint32_t i = 0; i < simulation->CPU_qty; i++)
@@ -153,7 +154,7 @@ void add_process_to_cpu(Simulation* simulation)
         cpu = current_cpu;
         deadline_cpu = deadline_current_cpu;
       }
-      else if (current_cpu->busy && deadline_current_cpu < deadline_cpu)
+      else if (current_cpu->busy && deadline_current_cpu > deadline_cpu)
       {
         cpu = current_cpu;
         deadline_cpu = deadline_current_cpu;
@@ -161,11 +162,11 @@ void add_process_to_cpu(Simulation* simulation)
     }
     if (next_deadline_process->deadline < cpu->process->deadline)
     {
-      simulation->current_time++;
       Process* out_process = cpu->process;
       out_process->status = READY;
       out_process->burst_time[out_process->current_burst] = simulation->current_time - cpu->time_process_added;
       out_process->interrupt_count++;
+      simulation->current_time++;
       next_deadline_process->status = RUNNING;
       cpu->process = next_deadline_process;
       cpu->time_process_added = simulation->current_time;
@@ -198,7 +199,7 @@ void handle_next_ready_process(Simulation* simulation, Process* process)
   add_process_to_cpu(simulation);
 }
 
-void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
+void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu, FILE* file)
 {
   simulation->current_time += cpu->time_left;
   cpu->busy = false;
@@ -210,19 +211,23 @@ void handle_next_finished_burst_process(Simulation* simulation, CPU* cpu)
     cpu->process->turnaround_time = simulation->current_time - cpu->process->arrival_time;
     cpu->process->waiting_total_time = cpu->process->turnaround_time - cpu->process->initial_burst_total_time;
     cpu->process->process_finished_bf_deadline = simulation->current_time - cpu->process->arrival_time <= cpu->process->deadline;
+    load_process_output(cpu->process, file);
   }
   else
   {
     printf("[FINISHED BURST]: PID %d finished burst, now WAITING (handle_next_finished_burst_process)\n", cpu->process->pid);
     cpu->process->status = WAITING;
+    cpu->process->started_waiting_time = simulation->current_time;
     cpu->process->status_times[WAITING] = simulation->current_time + cpu->process->waiting_time[cpu->process->current_burst];
   }
   add_process_to_cpu(simulation);
 
 }
 
-void run(Simulation* simulation)
+void run(Simulation* simulation, char* output_path)
 {
+  FILE* file = fopen(output_path, "w");
+  fprintf(file, "name,CPU_count,interruption_count,turnaround_time,response_time,waiting_time,deadline\n");
   while (1)
   {
     Process* next_arrival_process = get_next_process(simulation, NOT_ARRIVED);
@@ -236,11 +241,11 @@ void run(Simulation* simulation)
     }
     if (next_ready_process)
     {
-      next_event_times[PROCESS_READY] = next_ready_process -> waiting_time[next_ready_process -> current_burst] + next_ready_process -> started_waiting_time;
+      next_event_times[PROCESS_READY] = next_ready_process->waiting_time[next_ready_process->current_burst] + next_ready_process->started_waiting_time;
     }
     if (next_finished_burst_cpu)
     {
-      next_event_times[BURST_FINISHED] = next_finished_burst_cpu -> time_left + next_finished_burst_cpu -> time_process_added;
+      next_event_times[BURST_FINISHED] = next_finished_burst_cpu->time_left + next_finished_burst_cpu->time_process_added;
     }
     int next_event_index = -1;
     for (int i = 0; i < 3; i++)
@@ -266,21 +271,20 @@ void run(Simulation* simulation)
       handle_next_ready_process(simulation, next_ready_process);
       break;
     case BURST_FINISHED:
-      handle_next_finished_burst_process(simulation, next_finished_burst_cpu);
+      handle_next_finished_burst_process(simulation, next_finished_burst_cpu, file);
       break;
     default:
       // finish simulation
       printf("Terminada!\n");
+      fclose(file);
       return;
       break;
     }
   };
-  
 }
 
 void load_process_output(Process* process, FILE* file)
 {
-  
   char* name = process->name;
   uint32_t CPU_count = process->CPU_count;
   uint32_t interrupt_count = process->interrupt_count;
@@ -299,17 +303,4 @@ void load_process_output(Process* process, FILE* file)
     waiting_total_time,
     process_finished_bf_deadline
     );
-}
-
-void output_simulation(Simulation* simulation, char* output_path)
-{
-  FILE* file = fopen(output_path, "w");
-  fprintf(file, "name,CPU_count,interruption_count,turnaround_time,response_time,waiting_time,deadline\n");
-  for (uint32_t i = 0; i < simulation->queue->process_qty; i++)
-  {
-    Process* process = simulation->queue->process_array[i];
-    load_process_output(process, file);
-  }
-  fclose(file);
-  
 }
